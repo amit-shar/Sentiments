@@ -2,6 +2,7 @@ package com.imaginea
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.routing.RoundRobinPool
+import com.typesafe.config.ConfigFactory
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.ImmutableSettings
 import org.elasticsearch.common.transport.InetSocketTransportAddress
@@ -15,19 +16,22 @@ trait TwitterInstance {
   val twitter = new TwitterFactory(ConfigurationBuilderUtil.buildConfiguration).getInstance()
 }
 
+
 object QuerySearch extends TwitterInstance {
   val host = "172.16.50.201"
-  val port = 9300
+  val esport = 9300
   val transportClient = new TransportClient(ImmutableSettings.settingsBuilder().put("cluster.name", "elasticsearch")
     .put("client.transport.sniff", true).build())
-  val client = transportClient.addTransportAddress(new InetSocketTransportAddress(host, port))
+  val client = transportClient.addTransportAddress(new InetSocketTransportAddress(host, esport))
 
-  val actorSystem = ActorSystem("twitter")
-  val router: ActorRef =
-    actorSystem.actorOf(RoundRobinPool(2 * Runtime.getRuntime.availableProcessors()).props(Props[TwitterQueryFetcher]), "router")
+  val config = ConfigFactory.load("application.conf")
+  val actorSystem = ActorSystem("twitter", config)
 
-  def main(args: Array[String]) {
-    List("Modi", "Obama", "Steve Jobs").foreach(term => router ! QueryTwitter(term))
+
+  def main(args: Array[String]): Unit = {
+    val router: ActorRef =
+      actorSystem.actorOf(RoundRobinPool(2 * Runtime.getRuntime.availableProcessors()).props(Props[TwitterQueryFetcher]), "router")
+
   }
 
   def fetchAndSaveTweets(term: String): Unit = {
@@ -40,7 +44,7 @@ object QuerySearch extends TwitterInstance {
     while (queryResult.hasNext) {
       x = x + queryResult.getCount
       val tweetList = queryResult.getTweets.map {
-        x => println(TwitterObjectFactory.getRawJSON(x))
+        x =>
           bulkRequest.add(client.prepareIndex("twitter", "tweet").setSource(TwitterObjectFactory.getRawJSON(x)))
       }
       query = queryResult.nextQuery()
@@ -64,7 +68,6 @@ object QuerySearch extends TwitterInstance {
       s"""|{ "index" : { "_index" : "$indexName", "_type" : "type$indexName" } }
                                                                              |""".stripMargin + write(t)
     } else "" + write(t)
-
   }
 }
 

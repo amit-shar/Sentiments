@@ -22,6 +22,9 @@ libraryDependencies += "org.elasticsearch" % "elasticsearch" % "1.7.1"
 
 libraryDependencies += "com.typesafe.akka" % "akka-actor_2.11" % "2.4.2"
 
+libraryDependencies += "com.typesafe.akka" % "akka-remote_2.11" % "2.4.2"
+
+
 
 
 
