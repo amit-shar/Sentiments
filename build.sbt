@@ -4,12 +4,6 @@ scalaVersion := "2.11.7"
 
 version := "1.0"
 
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.5.2"
-
-libraryDependencies += "org.apache.spark" %% "spark-streaming" % "1.5.2"
-
-libraryDependencies += "org.apache.spark" %% "spark-streaming-twitter" % "1.5.2"
-
 libraryDependencies += "commons-httpclient" % "commons-httpclient" % "3.1"
 
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
@@ -23,6 +17,12 @@ libraryDependencies += "org.elasticsearch" % "elasticsearch" % "1.7.1"
 libraryDependencies += "com.typesafe.akka" % "akka-actor_2.11" % "2.4.2"
 
 libraryDependencies += "com.typesafe.akka" % "akka-remote_2.11" % "2.4.2"
+
+libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "1.4.1"
+
+libraryDependencies += ("org.elasticsearch" % "elasticsearch-spark_2.11" % "2.1.0.Beta4")
+
+libraryDependencies += "org.ahocorasick" % "ahocorasick" % "0.3.0"
 
 
 
