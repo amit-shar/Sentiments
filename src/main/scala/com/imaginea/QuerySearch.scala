@@ -18,7 +18,7 @@ trait TwitterInstance {
 
 
 object QuerySearch extends TwitterInstance {
-  val host = "172.16.50.201"
+  val host = "127.0.1.1"
   val esport = 9300
   val transportClient = new TransportClient(ImmutableSettings.settingsBuilder().put("cluster.name", "elasticsearch")
     .put("client.transport.sniff", true).build())
@@ -39,11 +39,11 @@ object QuerySearch extends TwitterInstance {
     var query = new Query(term).lang("en")
     query.setCount(100)
     var queryResult = twitter.search(query)
-    var x = 0
+    var tweetCount = 0
 
     while (queryResult.hasNext) {
-      x = x + queryResult.getCount
-      val tweetList = queryResult.getTweets.map {
+      tweetCount = tweetCount + queryResult.getCount
+      queryResult.getTweets.foreach {
         x =>
           bulkRequest.add(client.prepareIndex("twitter", "tweet").setSource(TwitterObjectFactory.getRawJSON(x)))
       }
@@ -51,7 +51,7 @@ object QuerySearch extends TwitterInstance {
       queryResult = twitter.search(query)
     }
     bulkRequest.execute()
-    println("count " + x, "term " + term)
+    println("count " + tweetCount, "term " + term)
   }
 
   def toJson[T <: AnyRef <% Product with Serializable](t: T, addESHeader: Boolean = true,
@@ -72,10 +72,12 @@ object QuerySearch extends TwitterInstance {
 }
 
 
-case class QueryTwitter(term: String)
+case class QueryTwitter(term: String , actorRef: ActorRef)
+case object Done
 
 class TwitterQueryFetcher extends Actor {
   override def receive: Receive = {
-    case QueryTwitter(term) => QuerySearch.fetchAndSaveTweets(term)
+    case QueryTwitter(term, actor) => QuerySearch.fetchAndSaveTweets(term)
+      actor ! Done
   }
 }
